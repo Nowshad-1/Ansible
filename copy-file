@@ -1,0 +1,28 @@
+---
+- name: Copy a file from Worker-01 to Worker-02
+  hosts: Worker-01
+  become: yes
+  tasks:
+    - name: Ensure the source file exists on Worker-01
+      stat:
+        path: /root/node1-file  # Replace with the actual source file path on Worker-01
+      register: source_file_stat
+
+- name: Fetch the file from Worker-01 to Ansible controller
+  hosts: Worker-01
+  tasks:
+    - name: Fetch the file from Worker-01
+      ansible.builtin.fetch:
+        src: /root/node1-file
+        dest: /tmp/
+      when: source_file_stat.stat.exists
+
+- name: Copy the file from Ansible controller to Worker-02
+  hosts: Worker-02
+  become: yes
+  tasks:
+    - name: Copy the file to Worker-02
+      ansible.builtin.copy:
+        src: /tmp/node1-file  # Specify the local file path on the Ansible controller
+        dest: /root/  # Replace with the actual destination directory on Worker-02
+
